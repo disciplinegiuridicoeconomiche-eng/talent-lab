@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Talent Lab</title>
+    <style>
+        :root {
+            --bg-page: #e8ece9; 
+            --card-white: #fdfdfb; 
+            --primary: #2c4a52; 
+            --accent: #5e8b7e; 
+            --border: #ccd5d1;
+            --success: #4a7c59; 
+            --text-muted: #546a70;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--primary);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { max-width: 800px; width: 100%; }
+
+        h1 { 
+            font-size: 32px; font-weight: 800; text-align: center;
+            color: var(--primary); margin-bottom: 10px; letter-spacing: -1px;
+        }
+
+        .intro-p { text-align: center; color: var(--text-muted); font-size: 17px; margin-bottom: 40px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
+
+        .card { 
+            background: var(--card-white); padding: 25px; border-radius: 16px;
+            border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            min-height: 100px;
+        }
+
+        .card b { 
+            display: block; font-size: 14px; color: var(--accent);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+        }
+
+        .scenario-box { 
+            background: var(--card-white); padding: 45px; border-radius: 20px;
+            margin-bottom: 25px; border: 1px solid var(--border); position: relative;
+        }
+
+        .tag { color: var(--accent); font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; display: block; letter-spacing: 1px; }
+
+        .q-text { font-size: 23px; font-weight: 700; line-height: 1.4; }
+
+        .opt-btn { 
+            display: block; width: 100%; padding: 20px; margin: 12px 0; 
+            border: 1px solid var(--border); border-radius: 12px;
+            background: var(--card-white); cursor: pointer; text-align: left; 
+            font-size: 16px; color: var(--primary); transition: all 0.2s;
+        }
+
+        .opt-btn:hover:not(:disabled) { background: #f4f7f5; border-color: var(--accent); transform: translateX(4px); }
+
+        #feedback { display: none; margin: 20px 0; padding: 25px; font-size: 15px; border-radius: 12px; background: #f1f5f3; border-left: 5px solid var(--accent); line-height: 1.6; }
+
+        .prog-bg { background: var(--border); height: 8px; border-radius: 10px; margin-bottom: 45px; overflow: hidden; }
+
+        .prog-fill { height: 100%; background: var(--accent); width: 0%; transition: 0.6s ease-in-out; }
+
+        .btn-main { background: var(--primary); color: white; border: none; padding: 22px; border-radius: 14px; cursor: pointer; font-weight: 700; font-size: 18px; width: 100%; transition: 0.3s; }
+
+        .btn-main:hover { filter: brightness(1.2); }
+
+        .report { background: var(--card-white); border: 2px solid var(--accent); border-radius: 20px; padding: 45px; margin: 25px 0; text-align: left; }
+
+        .badge { background: var(--primary); color: white; padding: 10px 25px; border-radius: 50px; font-weight: 700; display: inline-block; margin-bottom: 25px; font-size: 18px; }
+
+        .adv-item { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+
+        .adv-item b { display: block; font-size: 13px; color: var(--accent); margin-bottom: 6px; text-transform: uppercase; }
+
+        .copy-btn { background: var(--success); margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div id="screen-intro">
+        <h1>Executive Talent Lab</h1>
+        <p class="intro-p">Simulatore di Strategia e Identikit Professionale</p>
+        <div class="grid">
+            <div class="card"><b>🌳 ALBERO</b>Competenze tecniche<br>e relazionali.</div>
+            <div class="card"><b>🗺️ MAPPA SWOT</b>Visione di mercato,<br>rischi e opportunità.</div>
+            <div class="card"><b>🌱 PERSONALITÀ</b>Stile di leadership e<br>impatto decisionale.</div>
+            <div class="card"><b>🍃 VISIONE</b>Direzione strategica della<br>tua crescita futura.</div>
+        </div>
+        <button class="btn-main" onclick="startLab()">AVVIA SESSIONE ⚡</button>
+    </div>
+
+    <div id="screen-game" style="display:none;">
+        <div class="prog-bg"><div id="fill" class="prog-fill"></div></div>
+        <div class="scenario-box">
+            <span id="tag-text" class="tag"></span>
+            <span id="q-text" class="q-text"></span>
+        </div>
+        <div id="options-list"></div>
+        <div id="feedback"></div>
+        <button id="btn-next" class="btn-main" style="display:none; background: var(--success);" onclick="nextStep()">PROSSIMO SCENARIO ➡️</button>
+    </div>
+</div>
+
+<script>
+let cur = 0, score = 0, currentP = 3;
+
+const sfide = [
+    { tag: "Strategia Globale", q: "Un'improvvisa crisi blocca i rifornimenti esteri. Come reagisci?", 
+      opt: [
+        {t: "Attivo subito la mia rete di contatti internazionali per trovare nuovi fornitori.", p:3, s: "🌍 OTTIMA SCELTA. Avere più canali è l'unica difesa contro l'incertezza."},
+        {t: "Ricalcolo le spese minime per ridurre al massimo le perdite.", p:3, s: "📊 ANALISI SOLIDA. La gestione dei costi è il cuore della sopravvivenza aziendale."},
+        {t: "Verifico se i contratti mi permettono di evitare multe o penali.", p:2, s: "⚖️ APPROCCIO TECNICO. Conoscere le regole è fondamentale."},
+        {t: "Aspetto che la situazione si calmi per riprendere i contatti.", p:0, s: "⚠️ RISCHIO ELEVATO. L'attesa permette ai concorrenti di occupare i tuoi spazi."}
+      ] 
+    },
+    { tag: "Digital Transformation", q: "L'intelligenza artificiale può automatizzare molti dei tuoi compiti. Tu?", 
+      opt: [
+        {t: "Uso l'IA per velocizzare il lavoro e dedicarmi a decisioni più importanti.", p:3, s: "🚀 VISIONE MODERNA. L'IA potenzia il talento liberando tempo per il valore aggiunto."},
+        {t: "Mi concentro sulle relazioni umane che l'IA non può imitare.", p:3, s: "🤝 STRATEGIA UMANA. L'empatia e la negoziazione complessa sono insostituibili."},
+        {t: "Imparo a gestire i software di IA per restare al passo nel mio settore.", p:3, s: "🛠️ COMPETENZA TECNICA. Controllare gli strumenti significa controllare la velocità del lavoro."},
+        {t: "Mantengo i metodi tradizionali per controllare tutto personalmente.", p:0, s: "📉 RISCHIO. Rifiutare l'innovazione aumenta tempi e costi."}
+      ] 
+    },
+    { tag: "Mercati Internazionali", q: "Devi presentare un progetto a partner con una cultura molto diversa dalla tua.", 
+      opt: [
+        {t: "Studio le loro tradizioni per adattare il mio modo di comunicare.", p:3, s: "🌍 INTELLIGENZA CULTURALE. Adattarsi abbatte barriere e chiude accordi migliori."},
+        {t: "Punto sulla chiarezza dei dati: i numeri sono uguali in tutto il mondo.", p:3, s: "📊 RIGORE ANALITICO. Presentare dati certi costruisce fiducia immediata."},
+        {t: "Mantengo il mio stile per trasmettere sicurezza e coerenza.", p:1, s: "⚠️ RIGIDITÀ. Può essere confusa con mancanza di sensibilità culturale."},
+        {t: "Chiedo a un esperto esterno di gestire l'incontro al posto mio.", p:1, s: "👤 LEADERSHIP. Un manager deve gestire il confronto in prima persona."}
+      ] 
+    },
+    { tag: "Gestione Finanziaria", q: "L'azienda ha del denaro extra da investire. Quale idea proponi?", 
+      opt: [
+        {t: "Investo nella creazione di nuovi prodotti per aprirmi a nuovi mercati.", p:3, s: "📈 CRESCITA. Innovare significa nutrire l'azienda per i frutti di domani."},
+        {t: "Valuto l'acquisto di un'azienda concorrente analizzando punti di forza e debolezza.", p:3, s: "⚔️ ESPANSIONE. Trasformi la forza finanziaria in vantaggio competitivo."},
+        {t: "Mantengo il capitale fermo come riserva di sicurezza per le emergenze.", p:2, s: "🛡️ PRUDENZA. È saggio avere riserve, ma restare fermi aiuta i concorrenti."},
+        {t: "Distribuisco subito i soldi ai soci per avere consenso immediato.", p:1, s: "🎈 MIOPIA. Premiare solo il presente indebolisce il futuro."}
+      ]
+    },
+    { tag: "Etica e Regole", q: "Noti un errore in un documento economico già approvato. Che fai?", 
+      opt: [
+        {t: "Segnalo subito il problema: la sincerità è la mia forza.", p:3, s: "💎 RADICI SOLIDE. L'onestà ti rende un partner affidabile."},
+        {t: "Studio l'impatto dell'errore e preparo una soluzione prima di avvisare.", p:3, s: "⚖️ PROFESSIONISMO. Portare la soluzione insieme al problema è responsabilità."},
+        {t: "Valuto se il danno è piccolo prima di decidere se parlare.", p:1, s: "🌫️ RISCHIO ETICO. Le piccole bugie diventano crepe nella reputazione."},
+        {t: "Fingo di non aver visto nulla sperando che non se ne accorga nessuno.", p:0, s: "🧨 ERRORE FATALE. Nascondere errori rovina la carriera di chi comanda."}
+      ]
+    },
+    { tag: "Sfida ai Concorrenti", q: "Un concorrente entra nel mercato con prezzi molto più bassi. La tua mossa?", 
+      opt: [
+        {t: "Miglioro l'organizzazione interna per abbassare i miei costi.", p:3, s: "📊 EFFICIENZA. Rispondere con l'organizzazione è la difesa più solida."},
+        {t: "Punto sulla qualità superiore per giustificare il prezzo più alto.", p:3, s: "✨ VALORE. Se offri qualcosa di unico, il prezzo diventa secondario."},
+        {t: "Lancio una pubblicità per parlare male del nuovo arrivato.", p:1, s: "🥊 TATTICA DEBOLE. Attaccare gli altri non migliora la tua posizione."},
+        {t: "Riduco i guadagni pur di non perdere clienti subito.", p:2, s: "📉 DIFESA TEMPORANEA. Può servire all'inizio, ma non dura per sempre."}
+      ]
+    },
+    { tag: "Gestione del Team", q: "Nel tuo gruppo c'è un forte disaccordo sulla strada da seguire. Tu?", 
+      opt: [
+        {t: "Organizzo un incontro basato su fatti e dati reali.", p:3, s: "📐 LOGICA. I numeri tolgono la rabbia e mettono tutti d'accordo."},
+        {t: "Cerco un accordo che valorizzi le idee migliori di tutti.", p:3, s: "🤝 LEADERSHIP. Saper mediare trasforma i litigi in forza di squadra."},
+        {t: "Decido io velocemente per non perdere altro tempo.", p:2, s: "⚡ RAPIDITÀ. Utile in emergenza, ma serve poi spiegare il perché."},
+        {t: "Lascio che i membri del gruppo risolvano tra loro.", p:0, s: "🌑 ASSENZA. Un leader deve dare la direzione quando ci si perde."}
+      ]
+    },
+    { tag: "Sostenibilità", q: "Ti propongono un affare che fa guadagnare molto ma inquina l'ambiente.", 
+      opt: [
+        {t: "Rifiuto: rispettare l'ambiente è fondamentale per il futuro del marchio.", p:3, s: "♻️ LUNGIMIRANZA. Proteggere il pianeta protegge il successo di domani."},
+        {t: "Propongo un modo diverso di fare l'affare che inquini molto meno.", p:3, s: "⚖️ EQUILIBRIO. Guadagno e rispetto della natura sono la sfida moderna."},
+        {t: "Accetto: il mio unico compito è fare soldi subito.", p:1, s: "📉 MIOPIA. Oggi chi ignora l'ambiente viene punito dai clienti."},
+        {t: "Accetto il progetto ma pago per fare pubblicità ecologista.", p:0, s: "🧨 REPUTAZIONE. Cercare di sembrare buoni senza esserlo rovina il nome."}
+      ]
+    },
+    { tag: "Innovazione", q: "Hai un'idea nuova che sembra troppo avanti per i tempi attuali. Cosa fai?", 
+      opt: [
+        {t: "Faccio una prova su piccola scala per vedere se funziona.", p:3, s: "🔬 PRAGMATISMO. I test permettono di correggere gli errori velocemente."},
+        {t: "Proteggo l'idea legalmente e aspetto il momento giusto.", p:3, s: "🛡️ TUTELA. Saper aspettare il momento corretto è una dote fondamentale."},
+        {t: "Lascio perdere per concentrarmi solo su ciò che si vende oggi.", p:1, s: "🐢 STAGNAZIONE. Chi smette di inventare condanna la propria attività."},
+        {t: "Lancio l'idea in grande per obbligare le persone a cambiare abitudini.", p:2, s: "🔥 CORAGGIO. Senza prove, rischi di sprecare tutti i tuoi soldi."}
+      ]
+    },
+    { tag: "Visione Futura", q: "Qual è il tuo piano per la tua futura carriera?", 
+      opt: [
+        {t: "Aggiornare sempre le mie conoscenze e abilità.", p:3, s: "📚 CRESCITA. La formazione continua ti rende padrone del tuo futuro."},
+        {t: "Studiare le tendenze per capire quali saranno i lavori del domani.", p:3, s: "🗺️ ORIENTAMENTO. Navighi con una mappa verso obiettivi precisi."},
+        {t: "Cercare un posto fisso e tranquillo senza rischi.", p:1, s: "🌫️ COMFORT. In un mondo che cambia, restare fermi è il rischio più grande."},
+        {t: "Sperare che arrivino buone occasioni per caso.", p:0, s: "🎲 CASUALITÀ. La fortuna aiuta chi ha un piano chiaro."}
+      ]
+    },
+    { tag: "Gestione Crisi", q: "Un attacco informatico blocca i computer aziendali. Qual è la priorità?", 
+      opt: [
+        {t: "Isolo i computer colpiti e attivo i sistemi di recupero dati salvati.", p:3, s: "🛡️ REAZIONE TECNICA. Limitare il danno è la prima regola della sicurezza."},
+        {t: "Avviso subito i clienti e le persone coinvolte del problema.", p:3, s: "📢 TRASPARENZA. Essere onesti evita di perdere la fiducia della gente."},
+        {t: "Cerco di pagare i criminali per riavere indietro i dati subito.", p:0, s: "🧨 RISCHIO. Pagare non garantisce nulla e incoraggia altri attacchi."},
+        {t: "Faccio un controllo interno prima di decidere cosa fare.", p:1, s: "⏳ LENTEZZA. In questi casi, ogni minuto perso peggiora la situazione."}
+      ]
+    },
+    { tag: "Resistenza Forniture", q: "Un fornitore da cui dipendi alza i prezzi del 30% senza motivo.", 
+      opt: [
+        {t: "Cerco materiali alternativi per cambiare il modo di produrre.", p:3, s: "🔬 INNOVAZIONE. La tecnica può battere chi vuole approfittarsene."},
+        {t: "Cerco di fare un contratto lungo in cambio di uno sconto.", p:3, s: "🤝 PARTNERSHIP. Trasformare un fornitore in alleato aiuta a gestire i costi."},
+        {t: "Accetto il prezzo più alto e faccio pagare di più i miei clienti.", p:1, s: "⚠️ MERCATO. Rischi che i clienti vadano a comprare altrove."},
+        {t: "Smetto di comprare per protesta senza avere altre soluzioni.", p:0, s: "🌑 RISCHIO TOTALE. Senza materiali il tuo lavoro si ferma del tutto."}
+      ]
+    },
+    { tag: "Mantenere i Talenti", q: "Il tuo miglior collaboratore ha ricevuto un'offerta di lavoro da un concorrente.", 
+      opt: [
+        {t: "Gli propongo un premio basato sui guadagni futuri dell'azienda.", p:3, s: "💰 INTERESSE COMUNE. Legare il talento al successo della ditta è la mossa migliore."},
+        {t: "Gli offro più libertà di decidere e un ruolo di comando.", p:3, s: "👑 CRESCITA. Molti esperti cercano importanza, non solo più soldi."},
+        {t: "Gli offro la stessa cifra che gli ha proposto il concorrente.", p:2, s: "💵 DIFESA. Funziona al momento, ma non crea un vero legame."},
+        {t: "Lo lascio andare per non dare più soldi a lui rispetto agli altri.", p:1, s: "📉 PERDITA. Perdere chi sa fare il lavoro costa più di un aumento."}
+      ]
+    },
+    { tag: "Strategia di Crescita", q: "Ti propongono di comprare una piccola azienda innovativa ma che ancora non guadagna.", 
+      opt: [
+        {t: "Guardo quanto valgono le loro idee e la bravura dei loro dipendenti.", p:3, s: "🧠 ACQUISTO DI TALENTO. Spesso si compra il futuro, non i guadagni di oggi."},
+        {t: "Guardo se i loro prodotti completano bene i miei.", p:3, s: "🔗 UNIONE. Insieme dovete valere più che da soli."},
+        {t: "Rifiuto subito: se non guadagnano è un rischio inutile.", p:1, s: "🐢 PRUDENZA. Potresti perdere l'occasione di diventare il primo nel settore."},
+        {t: "Compro solo perché tutti dicono che quel marchio è di moda.", p:0, s: "🎈 RISCHIO. Senza un'analisi seria, rischi di buttare via i soldi."}
+      ]
+    },
+    { tag: "Comando Aziendale", q: "Il gruppo di comando è diviso su un investimento rischioso. Che fai?", 
+      opt: [
+        {t: "Propongo un test matematico per decidere basandosi sui dati.", p:3, s: "📐 LOGICA. I calcoli riducono la paura di sbagliare."},
+        {t: "Cerco un accordo per investire solo una piccola parte all'inizio.", p:3, s: "⚖️ PRAGMATISMO. Iniziare piano permette di vedere se la strada è giusta."},
+        {t: "Seguo il capo più importante per non creare tensioni.", p:1, s: "👤 POLITICA. Seguire il potere invece della logica è pericoloso."},
+        {t: "Non decido nulla per evitare che si litighi ancora.", p:0, s: "🌑 IMMOBILISMO. Non decidere è spesso peggio che sbagliare."}
+      ]
+    },
+    { tag: "Esperienza del Cliente", q: "I clienti dicono che l'assistenza dopo l'acquisto è peggiorata.", 
+      opt: [
+        {t: "Compro programmi migliori e insegno al personale come usarli.", p:3, s: "🛠️ STRUMENTI. La tecnologia giusta aiuta a curare meglio le persone."},
+        {t: "Studio tutto il percorso del cliente per capire dove si sbaglia.", p:3, s: "🔍 METODO. Trovare la radice del problema è la soluzione migliore."},
+        {t: "Faccio degli sconti per non far lamentare troppo i clienti.", p:0, s: "🧨 DISTRAZIONE. I problemi di qualità non si risolvono con i regali."},
+        {t: "Affido il servizio a un'azienda esterna che costa poco.", p:1, s: "📉 RISCHIO. Risparmiare sull'assistenza può farti perdere i clienti per sempre."}
+      ]
+    },
+    { tag: "Cultura della Sicurezza", q: "Molti dipendenti non seguono le regole per proteggere i dati sui computer.", 
+      opt: [
+        {t: "Creo un sistema a premi per chi segue meglio le regole.", p:3, s: "🎮 PREMI. Coinvolgere le persone è meglio che dare solo ordini."},
+        {t: "Rendo obbligatorie doppie password su ogni passaggio.", p:3, s: "🛡️ PROTEZIONE. La tecnologia deve aiutare a non fare errori umani."},
+        {t: "Faccio dei test a sorpresa per vedere chi sbaglia e spiegare l'errore.", p:3, s: "🎣 ADDESTRAMENTO. Sbagliare nelle prove aiuta a non sbagliare davvero."},
+        {t: "Dico che licenzierò chiunque faccia un errore.", p:1, s: "🔥 PAURA. Crea ansia ma non insegna come comportarsi bene."}
+      ]
+    },
+    { tag: "Immagine del Marchio", q: "Il tuo marchio sembra 'vecchio' agli occhi dei ragazzi più giovani.", 
+      opt: [
+        {t: "Collaboro con personaggi famosi sul web amati dai giovani.", p:3, s: "📱 INFLUENZA. Parlare la lingua dei social è fondamentale."},
+        {t: "Cambio immagine puntando su natura e tecnologia.", p:3, s: "✨ EVOLUZIONE. Cambiare aspetto restando se stessi è la vera sfida."},
+        {t: "Abbasso i prezzi tantissimo per attirare i ragazzi.", p:1, s: "📉 SVALUTAZIONE. Il prezzo basso non rende un marchio desiderabile."},
+        {t: "Aspetto che la moda passi e torni a piacere lo stile classico.", p:0, s: "⏳ ATTESA. Il mercato non torna mai indietro, va sempre avanti."}
+      ]
+    },
+    { tag: "Qualità del Lavoro", q: "Un reparto sbaglia troppo, facendo buttare via molti materiali.", 
+      opt: [
+        {t: "Uso calcoli precisi per capire come evitare ogni minimo errore.", p:3, s: "📏 RIGORE. La precisione assoluta azzera gli sprechi."},
+        {t: "Parlo con chi lavora fisicamente lì per capire cosa non va.", p:3, s: "👨‍🔧 ESPERIENZA. Chi fa il lavoro ogni giorno conosce la soluzione."},
+        {t: "Compro macchine nuove di ultima generazione.", p:2, s: "⚙️ TECNOLOGIA. Aiuta molto, ma costa parecchi soldi."},
+        {t: "Dico di lavorare più velocemente per coprire i pezzi buttati.", p:0, s: "🧨 ERRORE. Lavorare in fretta e male fa solo fallire prima."}
+      ]
+    },
+    { tag: "Eredità del Leader", q: "Devi scegliere chi prenderà il tuo posto in un ruolo di comando.", 
+      opt: [
+        {t: "Scelgo chi sa adattarsi ai cambiamenti e si comporta onestamente.", p:3, s: "👑 FUTURO. Il leader ideale deve saper gestire le novità di domani."},
+        {t: "Scelgo chi ha ottenuto i migliori risultati pratici e misurabili.", p:3, s: "📊 MERITO. I risultati concreti sono una base di partenza sicura."},
+        {t: "Scelgo la persona più amica per proteggere quello che ho fatto io.", p:1, s: "🌫️ EGO. Proteggere il proprio passato blocca il futuro dell'azienda."},
+        {t: "Lascio che decidano gli altri senza dare il mio parere.", p:1, s: "🌑 MANCANZA DI CORAGGIO. Un leader deve saper preparare chi verrà dopo."}
+      ]
+    }
+];
+
+function startLab() {
+    document.getElementById('screen-intro').style.display = 'none';
+    document.getElementById('screen-game').style.display = 'block';
+    load();
+}
+
+function load() {
+    currentP = 3;
+    const s = sfide[cur];
+    document.getElementById('fill').style.width = ((cur + 1) * 5) + "%";
+    document.getElementById('tag-text').innerHTML = `SESSIONE ${cur + 1} | AMBITO: ${s.tag.toUpperCase()}`;
+    document.getElementById('q-text').innerText = s.q;
+    const list = document.getElementById('options-list');
+    list.innerHTML = '';
+    document.getElementById('feedback').style.display = 'none';
+    document.getElementById('btn-next').style.display = 'none';
+    
+    let shuffled = [...s.opt].sort(() => Math.random() - 0.5);
+    shuffled.forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'opt-btn';
+        b.innerText = o.t;
+        b.onclick = () => {
+            const f = document.getElementById('feedback');
+            f.style.display = 'block';
+            f.innerText = o.s;
+            if(o.p >= 3) {
+                document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
+                score += currentP;
+                document.getElementById('btn-next').style.display = 'block';
+            } else {
+                currentP = Math.max(0, currentP - 1);
+                b.disabled = true;
+                b.style.opacity = "0.5";
+            }
+        };
+        list.appendChild(b);
+    });
+}
+
+function nextStep() {
+    cur++;
+    if(cur < 20) load();
+    else showFinal();
+}
+
+function showFinal() {
+    let pText = "", adviceHTML = "";
+    if (score >= 55) {
+        pText = "IL TOP MANAGER ETICO 👑";
+        adviceHTML = `<div class="adv-item"><b>Chi sei</b>Hai unito il guadagno al rispetto delle regole e dell'ambiente. Sei il leader moderno che capisce che senza onestà non c'è successo duraturo.</div>
+                     <div class="adv-item"><b>Studio & Relazioni</b>Sei un asso nei lavori di gruppo: sai ascoltare tutti e decidere con giustizia. Il tuo futuro è la guida di grandi progetti.</div>
+                     <div class="adv-item"><b>Consiglio</b>La tua forza è l'equilibrio. Continua a studiare come cambiano le regole del mondo per restare sempre un passo avanti.</div>`;
+    } else if (score >= 45) {
+        pText = "L'INNOVATORE DIGITALE 🚀";
+        adviceHTML = `<div class="adv-item"><b>Chi sei</b>Sei il profilo più "smart". Hai capito subito come l'IA e la tecnologia semplificano il lavoro. Trovi soluzioni veloci dove gli altri vedono solo problemi.</div>
+                     <div class="adv-item"><b>Studio & Relazioni</b>Sei il motore delle idee originali. Vedi il futuro come un'opportunità per cambiare le regole usando gli strumenti più moderni.</div>
+                     <div class="adv-item"><b>Consiglio</b>Non correre troppo da solo! Ricorda che anche il software più potente ha bisogno di un team affiatato per funzionare davvero.</div>`;
+    } else if (score >= 35) {
+        pText = "IL COORDINATORE AFFIDABILE 🛡️";
+        adviceHTML = `<div class="adv-item"><b>Chi sei</b>Sei la colonna portante, non sbagli mai una scadenza. Hai scelto sicurezza e qualità, applicando le regole per far funzionare bene tutto.</div>
+                     <div class="adv-item"><b>Studio & Relazioni</b>Sei l'amico e il collega su cui tutti contano. La tua carriera sarà basata sulla serietà e sulla capacità di organizzare il lavoro degli altri.</div>
+                     <div class="adv-item"><b>Consiglio</b>La tua precisione è un dono raro. Ogni tanto prova a uscire dagli schemi: le grandi scoperte nascono da un pizzico di coraggio in più.</div>`;
+    } else if (score >= 25) {
+        pText = "IL PROGETTISTA EMERGENTE ⚡";
+        adviceHTML = `<div class="adv-item"><b>Chi sei</b>Hai buone basi ma cerchi ancora il tuo stile. Hai avuto intuizioni corrette, ma a volte l'incertezza ti ha fatto perdere occasioni.</div>
+                     <div class="adv-item"><b>Studio & Relazioni</b>Sei un ottimo osservatore. Studi come si muovono i leader per capire la tua strada. Hai solo bisogno di fare più pratica sul campo.</div>
+                     <div class="adv-item"><b>Consiglio</b>Mettiti in gioco! Non aver paura di sbagliare una decisione: è proprio correggendo gli errori che si impara a guidare un'azienda.</div>`;
+    } else {
+        pText = "IL PROFILO 'ENTRY LEVEL' 🌱";
+        adviceHTML = `<div class="adv-item"><b>Chi sei</b>Sei all'inizio del percorso. Hai potenziale, ma tendi a essere troppo prudente per paura di fare danni. Preferisci osservare invece di agire.</div>
+                     <div class="adv-item"><b>Studio & Relazioni</b>Ti trovi bene nel gruppo ma lasci le responsabilità agli altri. Vedi il lavoro come una sfida difficile, ma hai tutto il tempo per imparare.</div>
+                     <div class="adv-item"><b>Consiglio</b>La sicurezza si costruisce un passo alla volta. Inizia a prenderti piccole responsabilità: il futuro ti sembrerà meno complicato!</div>`;
+    }
+
+    document.getElementById('app').innerHTML = `
+        <div style="text-align:center;">
+            <h1>REPORT FINALE</h1>
+            <div class="report">
+                <div class="badge">${pText}</div>
+                <p style="font-size: 18px; font-weight: 600;">Punteggio Totale: ${score} / 60</p>
+                <div style="margin-top:30px;">${adviceHTML}</div>
+            </div>
+            <button class="btn-main copy-btn" onclick="copyResult()">CLICCA QUI PER COPIARE IL REPORT E CONDIVIDERLO SULLA COLLABORATE BOARD 📋</button>
+        </div>`;
+}
+
+function copyResult() {
+    const text = document.querySelector('.report').innerText;
+    navigator.clipboard.writeText("RISULTATO EXECUTIVE TALENT LAB:\n" + text)
+        .then(() => alert("Report copiato! Ora incollalo sulla Collaborate Board di Nearpod."));
+}
+</script>
+
+</body>
+</html>
